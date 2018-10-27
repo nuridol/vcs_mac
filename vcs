@@ -28,7 +28,7 @@
 #
 # The full changelog can be found at <http://p.outlyer.net/vcs/files/CHANGELOG>
 
-declare -r VERSION="1.13.3"
+declare -r VERSION="1.13.3.mac"
 declare -r RELEASE=1
 declare -ri PRERELEASE=2
 [ "$RELEASE" -eq 1 ] || declare -r SUBVERSION="-pre.${PRERELEASE}"
@@ -183,7 +183,7 @@ declare -r STTY=$(stty -g)
 # It can be set in the configuration files if it isn't in the path or
 # the first getopt in the path isn't the right version.
 # A check will be made and a warning with details shown if required.
-declare GETOPT=getopt
+declare GETOPT=/usr/local/opt/gnu-getopt/bin/getopt
 # Set to 1 to print function calls
 declare -i DEBUG=0
 # Text before the user name in the signature
@@ -2672,6 +2672,7 @@ filt_resize() {
 filt_apply_stamp() {
 	trace $@
 	local filename=$1 timestamp=$2 width=$3 height=$4 context=$5 index=$6
+	timestamp=$(echo "$timestamp" | sed -e 's/\.[0-9]*$//')
 
 	local pts=$PTS_TSTAMPS
 	if [[ $height -lt 200 ]]; then
@@ -2681,8 +2682,8 @@ filt_apply_stamp() {
 	fi
 	# If the size is too small they won't be readable at all
 	# With the original font 8 was the minimum, with DejaVu 7 is readable
-	if [[ $pts -le 7 ]]; then
-		pts=7
+	if [[ $pts -le 11 ]]; then
+		pts=11
 		if [[ ( $index -eq 1 ) && ( $context -ne $CTX_EXT ) ]]; then
 			warn "Very small timestamps in use. Disabling them with -dt might be preferable"
 		fi
@@ -2691,7 +2692,7 @@ filt_apply_stamp() {
 	# affect stuff like the polaroid frames)
 	RESULT=" \( -box '$BG_TSTAMPS' -fill '$FG_TSTAMPS' -stroke none -pointsize '$pts' "
 	RESULT+="    -gravity '$GRAV_TIMESTAMP' -font '$FONT_TSTAMPS' -strokewidth 3 -annotate +5+5 "
-	RESULT+="    ' $timestamp ' \) -flatten -gravity None "
+	RESULT+="    '\ $timestamp ' \) -flatten -gravity None "
 }
 
 # Apply a framed photo-like effect
@@ -4120,7 +4121,7 @@ process() {
 			filesize_value="$(get_pretty_size $(dur "$f"))"
 		fi
 	else
-		filename_value="$(basename "$f")"
+		filename_value="$(basename "$f" | iconv -f UTF-8-MAC -t UTF-8)"
 		filesize_value="$(get_pretty_file_size "$f")"
 	fi
 
@@ -4148,14 +4149,15 @@ process() {
 			\) \
 			-bordercolor "$BG_HEADING" -border 9 \
 		\) \
-		"$output" -append \
-		\( \
-			-size ${headwidth}x$signheight -gravity Center "xc:$BG_SIGN" \
-			-font "$FONT_SIGN" -pointsize "$PTS_SIGN" \
-			-fill "$FG_SIGN" -annotate 0 "$signature" \
-		\) \
-		-append \
-		"$output"
+		"$output" -append "$output"
+#		"$output" -append \
+#		\( \
+#			-size ${headwidth}x$signheight -gravity Center "xc:$BG_SIGN" \
+#			-font "$FONT_SIGN" -pointsize "$PTS_SIGN" \
+#			-fill "$FG_SIGN" -annotate 0 "$signature" \
+#		\) \
+#		-append \
+#		"$output"
 	unset signature meta2 headwidth headheight heading fn_font signheight signlh
 
 	local wanted_name=${OUTPUT_FILES[$FILEIDX]}
@@ -4360,7 +4362,7 @@ internal_integrity_test() {
 # Prints the program identification to stderr
 show_vcs_info() { # Won't be printed in quiet modes
 	# Don't colourise this
-	infplain "Video Contact Sheet *NIX v${VERSION}${SUBVERSION}, (c) 2007-2017 Toni Corvera"
+	infplain "Video Contact Sheet *NIX v${VERSION}${SUBVERSION}, (c) 2018 NuRi, original (c) 2007-2017 Toni Corvera"
 }
 
 # Prints the list of options to stdout
